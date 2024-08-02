@@ -1,0 +1,85 @@
+/* body */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+/* main - auth , sign-in, sign-up */
+
+.container {
+    background-color: white;
+    padding: 20px 20px 30px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 300px;
+}
+.container h1 {
+    margin-bottom: 20px;
+}
+
+/* authentication page */
+
+.container .link {
+    margin: 10px 0;
+}
+.container .link a {
+    display: inline-block;
+    margin: 5px 0;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+.container .link a:hover {
+    background-color: #0056b3;
+}
+
+
+
+/* sign-up , sign-in page  */
+
+.container form {
+    display: flex;
+    flex-direction: column;
+}
+.container form input {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* sign-up button */
+
+.container form .signup-btn {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+}
+.container form .signup-btn:hover {
+    background-color: #218838;
+}
+
+/* sign-in button */
+
+.container form .signin-btn {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+.container form .signin-btn:hover {
+    background-color: #0056b3;
+}
