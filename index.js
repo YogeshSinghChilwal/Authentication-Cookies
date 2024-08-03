@@ -14,6 +14,18 @@ const saltRounds = 10;
 app.use(express.static("public"));
 app.use(express.urlencoded({extended:true}));
 
+app.use(session({
+    secret: "Top-secret-data",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24
+    }
+}))
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Database
 const db = new pg.Client({
     user: "postgres",
@@ -41,8 +53,7 @@ app.get('/signin', (req, res) => {
     res.render("sign-in.ejs");
 })
 
-
-// Route to check if username exists
+// Route to check if username exists in Real time
 app.get('/check-username', async (req, res) => {
     const username = req.query.username;
 
@@ -58,6 +69,24 @@ app.get('/check-username', async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+
+// Rooute for home page directly
+app.get('/home', (req, res) => {
+    if(req.isAuthenticated()){
+        res.render('home.ejs');
+    } else{
+        res.render('sign-in.ejs');
+    }
+})
+
+app.get("/logout", (req, res) => {
+    req.logout(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/");
+    });
+  });
 
 // Post routes
 app.post('/signup', async(req, res) => {
@@ -75,10 +104,16 @@ app.post('/signup', async(req, res) => {
                 if(err){
                     console.log("Error while generating a hash password: ",err);
                 } else{
-                    await db.query("INSERT INTO users(username, email, password) VALUES ($1, $2, $3)", [userName, email, hash])
+                    const resut = await db.query("INSERT INTO users(username, email, password) VALUES ($1, $2, $3) RETURNING *", [userName, email, hash])
+                    const user = resut.rows[0];
+
+                    req.login(user, (err) => {
+                        if(err) console.log(err);
+                        res.redirect("/home");
+                    })
                 }
             })
-            res.render("home.ejs");
+            // res.render("home.ejs");
         }
 
 
@@ -88,38 +123,48 @@ app.post('/signup', async(req, res) => {
     }
 })
 
-app.post('/signin', async(req, res) => {
-    const userEmail = req.body.userEmail;
-    const userPassword = req.body.password;
+app.post('/signin', passport.authenticate("local", {
+    successRedirect: "/home",
+    failureRedirect: "/signin"
+}))
 
+
+passport.use(new Strategy( async function verify(username, password, cb){
+    
     try{
-        const checkEmail = await db.query("SELECT * FROM users WHERE email = $1", [userEmail]);
+        const checkEmail = await db.query("SELECT * FROM users WHERE email = $1", [username]);
 
         if(checkEmail.rows.length > 0){
             const storedPassword = checkEmail.rows[0].password;
+            const user = checkEmail.rows[0];
 
-            bcrypt.compare(userPassword, storedPassword, (err, result) => {
+            bcrypt.compare(password, storedPassword, (err, result) => {
                 if(err){
-                    console.log("Error while comparing password: ",err);
+                    return cb(err);
                 } else{
                     if(result){
-                        res.render("home.ejs");
+                        return cb(null, user);
                     }else{
-                        res.send("Incorect password");
+                        return cb(null, false);
                     }
                 }
             })
         }else{
-            res.send("Email does not exist!");
+            return cb("user not found");
         }
 
     }catch(err){
-        console.log("Error while sign in Email: ", err);
+        return cb(err);
     }
+}))
+
+passport.serializeUser((user, cb) => {
+    cb(null, user);
 })
 
-
-
+passport.deserializeUser((user, cb) => {
+    cb(null, user);
+})
 
 
 
